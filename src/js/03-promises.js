@@ -1,43 +1,59 @@
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-const form = document.querySelector(".form");
-
-form.addEventListener("submit", handleSubmit);
-
-
-function handleSubmit(event) {
-  event.preventDefault();
-  const { delay, step, amount } = event.currentTarget;
-
-  let delayPromise = Number(delay.value);
-
-  for (let i = 1; i <= amount.value; i++) {
-    createPromise(i, delayPromise)
-      .then(({ position, delay }) => {
-        setTimeout(() => {
-          Notify.success(`✅ Fulfilled promise ${position} in ${delay}ms`)
-        }, delay)
-      })
-      .catch(({ position, delay }) => {
-        setTimeout(() => {
-          Notify.failure(`❌ Rejected promise ${position} in ${delay}ms`)
-        }, delay)
-      });
-    delayPromise += Number(step.value);
-    
-  };
-}
+const delayInput = document.querySelector("input[name='delay']");
+const delayStep = document.querySelector("input[name='step']");
+const promiseCount = document.querySelector("input[name='amount']");
+const submitBtn = document.querySelector('button[type="submit"]');
 
 
 function createPromise(position, delay) {
-  return new Promise((resolve, reject) => {
-    const shouldResolve = Math.random() > 0.3;
-    
+
+  const shouldResolve = Math.random() > 0.3;
+  return new Promise ((resolve, reject) => {
+    setTimeout(() => {
       if (shouldResolve) {
-    resolve({position, delay})
+        // Fulfill
+        resolve(`✅ Fulfilled promise ${position} in ${delay}ms`);
+ 
       } else {
-    reject({position, delay})
+        // Reject
+        reject(`❌ Rejected promise ${position} in ${delay}ms`);
+      }    
+    }, delay)
+  })
+  
+}
+
+const createDelay = (e) => {
+  e.preventDefault() 
+  
+  let delay = Number(delayInput.value);
+  let step = Number(delayStep.value);
+  let amount = Number(promiseCount.value);
+
+  if (delay >= 0 && step >= 0) {  
+    
+    for (let i = 1; i <= amount; i += 1){
+
+      if (i == 1) {
+        delay = Number(delayInput.value);    
+      }
+      else {
+        delay += step;
       }
       
+      createPromise(i, delay)
+      .then(value => {
+    Notify.success(value);
   })
+  .catch(error => {
+    Notify.failure(error);
+  });
+    }
+  }
+  else {
+    Notify.failure('please, enter correct value')
+  }
 }
+
+submitBtn.addEventListener("click", createDelay);
